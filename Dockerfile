@@ -1,17 +1,30 @@
-FROM lsiobase/alpine.python
+FROM lsiobase/alpine
 
-# set version label
-ARG BUILD_DATE
-ARG VERSION
-LABEL build_version="Linuxserver.io version:- ${VERSION} Build-date:- ${BUILD_DATE}"
+# install runtime packages
+RUN \
+ apk add --no-cache \
+	ca-certificates \
+	py-pip \
+	python && \
+
+# add pip packages
+ pip install --no-cache-dir -U \
+	pip && \
+ LIBRARY_PATH=/lib:/usr/lib \
+ pip install --no-cache-dir -U \
+	setuptools
 
 # install runtime packages
-RUN mkdir /config && \
-	ln -s /config /root/.flexget && \
-	pip install --no-cache-dir -U flexget
+RUN pip install --no-cache-dir \
+	"flexget>2.5.3" || \
+	pip install --no-cache-dir \
+	"flask-login>=0.3.2,<0.4.0" \
+	"flexget<=2.5.3"
+RUN mkdir -p /config && \
+	ln -s /config /root/.flexget
 
 # add local files
 COPY root/ /
 
 # ports and volumes
-VOLUME /config
+VOLUME /config /results
